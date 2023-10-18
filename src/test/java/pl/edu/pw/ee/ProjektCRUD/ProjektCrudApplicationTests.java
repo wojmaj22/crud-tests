@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.junit4.SpringRunner;
 import pl.edu.pw.ee.ProjektCRUD.dao.StudentRepository;
@@ -116,6 +117,30 @@ class ProjektCrudApplicationTests {
 		//when
 		//then
 		Assert.assertThrows(InvalidDataAccessApiUsageException.class,()->repository.save(student));
+	}
+
+	@Test
+	public void ShouldDeleteRemoveItemFromDB(){
+		//given
+		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
+		repository.save(student);
+		//when
+		repository.delete(student);
+		//then
+		Assert.assertThrows(NoSuchElementException.class,()->repository.findById(319069).get());
+	}
+
+	@Test
+	public void ShouldDeleteThrowErrorWhenDeletingItemIsNotInDB(){
+		//given
+		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
+		repository.save(student);
+		//when
+		Student notExistingStudent = new Student( 319123, "Michał", "Ktokolwiek", 21, "02101104357");
+		repository.delete(notExistingStudent);
+		//then
+		Optional<Student> studentFromDB = repository.findById(319123);
+		Assert.assertFalse(studentFromDB.isPresent());
 	}
 
 }
