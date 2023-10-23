@@ -1,45 +1,46 @@
 package pl.edu.pw.ee.ProjektCRUD;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.junit4.SpringRunner;
-import pl.edu.pw.ee.ProjektCRUD.dao.StudentRepository;
 import pl.edu.pw.ee.ProjektCRUD.model.Student;
-import org.junit.Assert;
+import pl.edu.pw.ee.ProjektCRUD.service.StudentService;
 
-import java.sql.Struct;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
 class ProjektCrudApplicationTests {
-
+	
+	private final StudentService crudService;
+	
 	@Autowired
-	private StudentRepository repository;
+	public ProjektCrudApplicationTests( StudentService service){
+		crudService = service;
+	}
 
 	@BeforeEach
 	public void BeforeEach(){
-		repository.deleteAll();
+		crudService.deleteAll();
 	}
 
-	Comparator<Student> byIndexNumber = new Comparator<Student>() {
-		@Override
-		public int compare(Student o1, Student o2) {
-			return o1.getIndexNumber().compareTo(o2.getIndexNumber());
-		}
-	};
+	Comparator<Student> byIndexNumber = Comparator.comparing(Student::getIndexNumber);
+	
 	@Test
 	public void ShouldReadReturnAlreadyAddedStudent(){
 		//given
 		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
-		repository.save(student);
+		crudService.save(student);
 		//when
-		Student studentFromDB = repository.findById(319069).get();
+		Student studentFromDB = crudService.read(319069);
 		//then
 		Assert.assertEquals(student,studentFromDB);
 	}
@@ -48,13 +49,13 @@ class ProjektCrudApplicationTests {
 	public void ShouldReadReturnCorrectAlreadyAddedStudentIfManyAreInDB(){
 		//given
 		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
-		repository.save(student);
+		crudService.save(student);
 		Student otherStudent = new Student( 111111, "Dawid", "Szczepankowski", 21, "02301234357");
-		repository.save(otherStudent);
+		crudService.save(otherStudent);
 		Student otherStudent2 = new Student( 319420, "Dawid", "Stereńczak", 21, "02301104321");
-		repository.save(otherStudent2);
+		crudService.save(otherStudent2);
 		//when
-		Student newStudent = repository.findById(319069).get();
+		Student newStudent = crudService.read(319069);
 		//then
 		Assert.assertEquals(student,newStudent);
 	}
@@ -63,13 +64,13 @@ class ProjektCrudApplicationTests {
 	public void ShouldReadAllReturnAllStudents(){
 		//given
 		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
-		repository.save(student);
+		crudService.save(student);
 		Student otherStudent = new Student( 111111, "Dawid", "Szczepankowski", 21, "02301234357");
-		repository.save(otherStudent);
+		crudService.save(otherStudent);
 		Student otherStudent2 = new Student( 319420, "Dawid", "Stereńczak", 21, "02301104321");
-		repository.save(otherStudent2);
+		crudService.save(otherStudent2);
 		//when
-		List<Student> allStudents = repository.findAll();
+		List<Student> allStudents = crudService.readAll();
 		allStudents.sort(byIndexNumber);
 		//then
 		Student[] studentArray = {student,otherStudent,otherStudent2};
@@ -84,16 +85,16 @@ class ProjektCrudApplicationTests {
 		//given
 		//when
 		//then
-		Assert.assertThrows(NoSuchElementException.class,()->repository.findById(319069).get());
+		Assert.assertThrows(EntityNotFoundException.class,()->crudService.read(319069));
 	}
 	@Test
 	public void ShouldCreateAddItemToArray(){
 		//given
 		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
 		//when
-		repository.save(student);
+		crudService.save(student);
 		//then
-		Student studentFromDB = repository.findById(319069).get();
+		Student studentFromDB = crudService.read(319069);
 		Assert.assertEquals(student,studentFromDB);
 	}
 
@@ -103,10 +104,10 @@ class ProjektCrudApplicationTests {
 		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
 		Student studentWithSameIndex = new Student( 319069, "Piotr", "Wiśniewski", 22, "02301104351");
 		//when
-		repository.save(student);
-		repository.save(studentWithSameIndex);
+		crudService.save(student);
+		crudService.save(studentWithSameIndex);
 		//then
-		Student studentFromDB = repository.findById(319069).get();
+		Student studentFromDB = crudService.read(319069);
 		Assert.assertEquals(studentWithSameIndex,studentFromDB);
 	}
 
@@ -116,31 +117,31 @@ class ProjektCrudApplicationTests {
 		Student student = null;
 		//when
 		//then
-		Assert.assertThrows(InvalidDataAccessApiUsageException.class,()->repository.save(student));
+		Assert.assertThrows(InvalidDataAccessApiUsageException.class,()->crudService.save(student));
 	}
 
 	@Test
 	public void ShouldDeleteRemoveItemFromDB(){
 		//given
 		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
-		repository.save(student);
+		crudService.save(student);
 		//when
-		repository.delete(student);
+		crudService.delete(student);
 		//then
-		Assert.assertThrows(NoSuchElementException.class,()->repository.findById(319069).get());
+		Assert.assertThrows(EntityNotFoundException.class,()->crudService.read(319069));
 	}
 
 	@Test
 	public void ShouldDeleteThrowErrorWhenDeletingItemIsNotInDB(){
 		//given
 		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
-		repository.save(student);
+		crudService.save(student);
 		//when
 		Student notExistingStudent = new Student( 319123, "Michał", "Ktokolwiek", 21, "02101104357");
-		repository.delete(notExistingStudent);
+		crudService.delete(notExistingStudent);
 		//then
-		Optional<Student> studentFromDB = repository.findById(319123);
-		Assert.assertFalse(studentFromDB.isPresent());
+		Assert.assertThrows(EntityNotFoundException.class, ()->crudService.read(319123));
+		
 	}
 
 }
