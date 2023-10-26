@@ -132,6 +132,26 @@ class ProjektCrudApplicationTests {
 	}
 
 	@Test
+	public void ShouldDeleteAllItemsFromDB(){
+		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
+		Student student2 = new Student( 319070, "Dawid", "Szczepankowski", 21, "02987104357");
+		Student student3 = new Student( 319071, "Piotr", "Cherry", 21, "02306454357");
+		crudService.save(student);
+		crudService.save(student2);
+		crudService.save(student3);
+		//when
+		crudService.deleteAll();
+		//then
+		Student[] studentArray = {student,student2,student3};
+		List<Student> expectedList = Arrays.asList(studentArray);
+		expectedList.sort(byIndexNumber);
+		for(int i=319069;i<319072;i++) {
+			int finalI = i;
+			Assert.assertThrows(EntityNotFoundException.class,()->crudService.read(finalI));
+		}
+	}
+
+	@Test
 	public void ShouldDeleteThrowErrorWhenDeletingItemIsNotInDB(){
 		//given
 		Student student = new Student( 319069, "Wojciech", "Majchrzak", 21, "02301104357");
