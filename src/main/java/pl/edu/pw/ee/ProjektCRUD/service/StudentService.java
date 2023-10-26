@@ -14,8 +14,12 @@ import java.util.Optional;
 public class StudentService {
 	
 	private final StudentRepository repository;
-	
-	public List<Student> readAll(){
+
+    public boolean existsById(Integer indexNumber) {
+		return repository.existsById(indexNumber);
+    }
+
+    public List<Student> readAll(){
 		return repository.findAll();
 	}
 	
