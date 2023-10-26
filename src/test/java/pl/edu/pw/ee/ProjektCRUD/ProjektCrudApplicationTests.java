@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.junit4.SpringRunner;
+import pl.edu.pw.ee.ProjektCRUD.dao.StudentRepository;
 import pl.edu.pw.ee.ProjektCRUD.model.Student;
 import pl.edu.pw.ee.ProjektCRUD.service.StudentService;
 
@@ -143,11 +144,9 @@ class ProjektCrudApplicationTests {
 		crudService.deleteAll();
 		//then
 		Student[] studentArray = {student,student2,student3};
-		List<Student> expectedList = Arrays.asList(studentArray);
-		expectedList.sort(byIndexNumber);
-		for(int i=319069;i<319072;i++) {
-			int finalI = i;
-			Assert.assertThrows(EntityNotFoundException.class,()->crudService.read(finalI));
+		for (Student stud:studentArray
+			 ) {
+			Assert.assertFalse(crudService.existsById(stud.getIndexNumber()));
 		}
 	}
 
