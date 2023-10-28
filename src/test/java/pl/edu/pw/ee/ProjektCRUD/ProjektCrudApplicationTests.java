@@ -163,4 +163,58 @@ class ProjektCrudApplicationTests {
 		
 	}
 
+	@Test
+	public void ShouldUpdateStudentWhenExistsInDatabase() {
+		//given
+		Student student = new Student(319108, "Dawid", "Stereńczak", 21, "12345678910");
+		crudService.save(student);
+		Student updatedStudent = new Student(319108, "Jan", "Kowalski", 23, "11111111111");
+		//when
+		crudService.update(updatedStudent);
+		//then
+		Student studentFromDB = crudService.read(319108);
+		Assert.assertEquals(updatedStudent, studentFromDB);
+	}
+
+	@Test
+	public void ShouldUpdateCorrectStudentWhenMultipleStudentsExistInDatabase() {
+		// given
+		Student student1 = new Student(319069, "Wojciech", "Majchrzak", 21, "02301104357");
+		Student student2 = new Student(319070, "Dawid", "Szczepankowski", 21, "02987104357");
+		crudService.save(student1);
+		crudService.save(student2);
+
+		Student updatedStudent = new Student(319069, "Anna", "Nowak", 23, "9876543210");
+
+		// when
+		crudService.update(updatedStudent);
+
+		// then
+		Student studentFromDB1 = crudService.read(319069);
+		Student studentFromDB2 = crudService.read(319070);
+
+		Assert.assertEquals(updatedStudent, studentFromDB1);
+		Assert.assertNotEquals(updatedStudent, studentFromDB2);
+	}
+
+	@Test
+	public void ShouldThrowAnExceptionWhenUpdatingNonExistentStudent() {
+		//given
+		Student student = new Student(319069, "Wojciech", "Majchrzak", 21, "02301104357");
+		//when
+		//then
+		Assert.assertThrows(EntityNotFoundException.class, () -> crudService.update(student));
+	}
+
+	@Test
+	public void ShouldThrowAnExceptionWhenTryingToUpdateWithNullStudent() {
+		//given
+		Student student = null;
+		//when
+		//then
+		Assert.assertThrows(NullPointerException.class, () -> crudService.update(student));
+	}
+
+
+
 }
